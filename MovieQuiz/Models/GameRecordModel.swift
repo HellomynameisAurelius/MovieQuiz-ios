@@ -10,7 +10,7 @@ struct BestGame: Codable {
     let date: Date
 }
 
-extension BestGame : Comparable {
+extension BestGame: Comparable {
 
     private var accuracy: Double {
         guard total != 0 else {
