@@ -10,7 +10,6 @@ protocol StatisticService {
 }
 
 final class StatisticServiceImplementation {
-    
     private enum Keys: String {
         case correct, total, bestGame, gamesCount
     }
@@ -34,7 +33,6 @@ final class StatisticServiceImplementation {
 }
 
 extension StatisticServiceImplementation: StatisticService {
-    
     var gamesCount: Int {
         get {
             userDefaults.integer(forKey: Keys.gamesCount.rawValue)
