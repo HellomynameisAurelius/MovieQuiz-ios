@@ -10,40 +10,65 @@ import UIKit
 protocol MovieQuizViewControllerProtocol: AnyObject {
     func show(quiz step: QuizStepViewModel)
     func showFinalResults()
-    
     func highlightImageBorder(isCorrectAnswer: Bool)
-
     func showLoadingIndicator()
     func hideLoadingIndicator()
     func blockButton()
-    
     func showNetworkError(message: String)
 }
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
+    // MARK: - Private Properties
     private let statisticService: StatisticService!
     private var questionFactory: QuestionFactoryProtocol?
     private weak var viewController: MovieQuizViewControllerProtocol?
-
     private var currentQuestion: QuizQuestion?
     private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
     private var correctAnswers: Int = 0
-
-    
     
     init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
-        
         statisticService = StatisticServiceImplementation()
-        
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
     }
     
-    // MARK: - QuestionFactoryDelegate
+    // MARK: - Private Methods
+    private func didAnswer(isYes: Bool) {
+        guard let currentQuestion else {
+            return
+        }
+        
+        let givenAnswer = isYes
+        
+        proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+    }
     
+    private func proceedWithAnswer(isCorrect: Bool) {
+        didAnswer(isCorrectAnswer: isCorrect)
+        
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        viewController?.blockButton()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self else { return }
+            self.proceedToNextQuestionOrResults()
+            self.viewController?.blockButton()
+        }
+    }
+    
+    private func proceedToNextQuestionOrResults() {
+        if self.isLastQuestion() {
+            viewController?.showFinalResults()
+        } else {
+            self.switchToNextQuestion()
+            questionFactory?.requestNextQuestion()
+        }
+    }
+    
+    // MARK: - Internal Methods
     func didLoadDataFromServer() {
         viewController?.hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
@@ -55,7 +80,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
+        guard let question else {
             return
         }
         
@@ -69,7 +94,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
     }
-    
     
     func didAnswer(isCorrectAnswer: Bool) {
         if isCorrectAnswer {
@@ -102,41 +126,9 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         didAnswer(isYes: false)
     }
     
-    private func didAnswer(isYes: Bool) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        
-        let givenAnswer = isYes
-        
-        proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-    }
-    
-    private func proceedWithAnswer(isCorrect: Bool) {
-        didAnswer(isCorrectAnswer: isCorrect)
-        
-        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
-        viewController?.blockButton()
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            self.proceedToNextQuestionOrResults()
-            self.viewController?.blockButton()
-        }
-    }
-    
-    private func proceedToNextQuestionOrResults() {
-        if self.isLastQuestion() {
-            viewController?.showFinalResults()
-        } else {
-            self.switchToNextQuestion()
-            questionFactory?.requestNextQuestion()
-        }
-    }
-    
     func makeResultMessage() -> String {
         statisticService.store(correct: correctAnswers, total: questionsAmount)
-        guard let statisticService = statisticService, let bestGame = statisticService.bestGame else {
+        guard let statisticService, let bestGame = statisticService.bestGame else {
             assertionFailure("error message")
             return ""
         }

@@ -32,12 +32,11 @@ final class MovieQuizViewControllerMock: MovieQuizViewControllerProtocol {
     func blockButton() {
         
     }
-
+    
     func showNetworkError(message: String) {
         
     }
 }
-
 
 final class MovieQuizPresenterTests: XCTestCase {
     func testPresenterConvertModel() throws {

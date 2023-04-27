@@ -2,6 +2,12 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
+    // MARK: - Override properties
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        .lightContent
+    }
+    
+    // MARK: - IBOutlet
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
     @IBOutlet private weak var counterLabel: UILabel!
@@ -9,20 +15,15 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
-        
+    
+    // MARK: - Private Properties
     private var presenter: MovieQuizPresenter!
     
     // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
         presenter = MovieQuizPresenter(viewController: self)
-    }
-        
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        .lightContent
     }
     
     // MARK: - Actions
@@ -33,8 +34,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
     }
-        
-    // MARK: - Private functions
+    
+    // MARK: - Private Methods
     private func setupViews() {
         questionTitleLabel.font = UIFont(name: "YSDisplay-Medium", size: 20)
         counterLabel.font = UIFont(name: "YSDisplay-Medium", size: 20)
@@ -44,6 +45,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         imageView.layer.cornerRadius = 20
     }
     
+    // MARK: - Internal Methods
     func highlightImageBorder(isCorrectAnswer: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -63,14 +65,13 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         let alertModel = AlertModel(title: "Этот раунд окончен!",
                                     message: message,
                                     buttonText: "Сыграть еще раз") { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             self.presenter.restartGame()
         }
         let alert = AlertPresenter()
         alert.show(view: self, alertModel: alertModel)
     }
     
-    //TODO: - Захолдить кнопки
     func blockButton() {
         if yesButton.isEnabled || noButton.isEnabled {
             yesButton.isEnabled = false
@@ -96,7 +97,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         let alertModel = AlertModel(title: "Ошибка",
                                     message: message,
                                     buttonText: "Попробовать ещё раз") { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             self.presenter.restartGame()
         }
         let alert = AlertPresenter()
